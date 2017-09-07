@@ -152,19 +152,31 @@ int brubeck_statsd_msg_parse(struct brubeck_statsd_msg *msg, char *buffer, char 
 		msg->key_len = 0;
 		while (*buffer != ':' && *buffer != '\0') {
 			/* Invalid metric, can't have a space */
-			if (*buffer == ' ')
+			if (*buffer == ' ') {
+#ifdef BRUBECK_DEBUG
+				log_splunk("sampler=statsd-secure event=bad_key_with_space key='%.*s'", msg->key_len, msg->key);
+#endif
 				return -1;
+			}
 			++buffer;
 		}
-		if (*buffer == '\0')
+		if (*buffer == '\0') {
+#ifdef BRUBECK_DEBUG
+				log_splunk("sampler=statsd-secure event=bad_key_with_terminal key='%.*s'", msg->key_len, msg->key);
+#endif
 			return -1;
+		}
 
 		msg->key_len = buffer - msg->key;
 		*buffer++ = '\0';
 
 		/* Corrupted metric. Graphite won't swallow this */
-		if (msg->key[msg->key_len - 1] == '.')
+		if (msg->key[msg->key_len - 1] == '.') {
+#ifdef BRUBECK_DEBUG
+			log_splunk("sampler=statsd-secure event=bad_key_with_dot key='%.*s'", msg->key_len, msg->key);
+#endif
 			return -1;
+		}
 	}
 
 	/**
@@ -178,8 +190,12 @@ int brubeck_statsd_msg_parse(struct brubeck_statsd_msg *msg, char *buffer, char 
 		msg->modifiers = 0;
 		buffer = parse_float(buffer, &msg->value, &msg->modifiers);
 
-		if (*buffer != '|')
+		if (*buffer != '|') {
+#ifdef BRUBECK_DEBUG
+			log_splunk("sampler=statsd-secure event=bad_msg_with_no_pipe key='%.*s'", msg->key_len, msg->key);
+#endif
 			return -1;
+		}
 
 		buffer++;
 	}
@@ -198,14 +214,17 @@ int brubeck_statsd_msg_parse(struct brubeck_statsd_msg *msg, char *buffer, char 
 			case 'C': msg->type = BRUBECK_MT_COUNTER; break;
 			case 'h': msg->type = BRUBECK_MT_HISTO; break;
 			case 'm':
-					  ++buffer;
-					  if (*buffer == 's') {
-						  msg->type = BRUBECK_MT_TIMER;
-						  break;
-					  }
+				++buffer;
+				if (*buffer == 's') {
+					 msg->type = BRUBECK_MT_TIMER;
+					 break;
+				 }
 
 			default:
-					  return -1;
+#ifdef BRUBECK_DEBUG
+				log_splunk("sampler=statsd-secure event=bad_type type='%c'", *buffer);
+#endif
+				return -1;
 		}
 
 		buffer++;
