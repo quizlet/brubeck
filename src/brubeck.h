@@ -42,5 +42,3 @@ struct brubeck_metric;
 #include "server.h"
 
 #endif
-
-#define BRUBECK_DEBUG
