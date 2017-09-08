@@ -212,7 +212,7 @@ static void each_wrapper(
 	memcpy(buffer, CARBON_PATH_PREFIX, prefix_len);
 	size_t remaining = min(key_len, CARBON_PATH_MAX_LEN - prefix_len);
 	memcpy(buffer + prefix_len, key, remaining);
-  buffer[key_len + prefix_len] = '\0';
+	buffer[key_len + prefix_len] = '\0';
 
 	carbon->backend.sample_each(buffer, value, backend);
 }
