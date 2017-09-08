@@ -14,6 +14,7 @@ struct brubeck_backend {
 	int (*connect)(void *);
 	bool (*is_connected)(void *);
 	void (*sample)(const char *, value_t, void *);
+	void (*sample_each)(const char *, value_t, void *);
 	void (*flush)(void *);
 
 	uint32_t tick_time;

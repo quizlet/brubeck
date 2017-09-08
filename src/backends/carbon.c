@@ -196,6 +196,27 @@ static void pickle1_each(
 		carbon->backend.tick_time, value);
 }
 
+#define min(a,b) a > b ? b : a
+
+static void each_wrapper(
+	const char *key,
+	value_t value,
+	void *backend)
+{
+	struct brubeck_carbon *carbon = (struct brubeck_carbon *)backend;
+	char buffer[CARBON_PATH_MAX_LEN];
+
+	size_t key_len = strlen(key);
+	size_t prefix_len = strlen(CARBON_PATH_PREFIX);
+
+	memcpy(buffer, CARBON_PATH_PREFIX, prefix_len);
+	size_t remaining = min(key_len, CARBON_PATH_MAX_LEN - prefix_len);
+	memcpy(buffer + prefix_len, key, remaining);
+  buffer[key_len + prefix_len] = '\0';
+
+	carbon->backend.sample_each(buffer, value, backend);
+}
+
 struct brubeck_backend *
 brubeck_carbon_new(struct brubeck_server *server, json_t *settings, int shard_n)
 {
@@ -214,14 +235,15 @@ brubeck_carbon_new(struct brubeck_server *server, json_t *settings, int shard_n)
 	carbon->backend.shard_n = shard_n;
 	carbon->backend.connect = &carbon_connect;
 	carbon->backend.is_connected = &carbon_is_connected;
+	carbon->backend.sample = &each_wrapper;
 
 	if (pickle) {
-		carbon->backend.sample = &pickle1_each;
+		carbon->backend.sample_each = &pickle1_each;
 		carbon->backend.flush = &pickle1_flush;
 		carbon->pickler.ptr = malloc(PICKLE_BUFFER_SIZE);
 		pickle1_init(&carbon->pickler);
 	} else {
-		carbon->backend.sample = &plaintext_each;
+		carbon->backend.sample_each = &plaintext_each;
 		carbon->backend.flush = NULL;
 	}
 

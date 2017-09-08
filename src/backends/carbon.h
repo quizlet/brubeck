@@ -5,6 +5,9 @@
 #define PICKLE_BUFFER_SIZE 4096
 #define PICKLE1_SIZE(key_len) (32 + key_len)
 
+#define CARBON_PATH_PREFIX "stats."
+#define CARBON_PATH_MAX_LEN 512
+
 struct brubeck_carbon {
 	struct brubeck_backend backend;
 

@@ -29,6 +29,7 @@ enum {
 };
 
 struct brubeck_metric {
+
 	struct brubeck_metric *next;
 
 #ifdef BRUBECK_METRICS_FLOW
